@@ -29,7 +29,7 @@ start-service MSSQLSERVER
 if($sa_password -ne "_")
 {
     Write-Verbose "Changing SA login credentials"
-    $sqlcmd = "ALTER LOGIN sa with password=" +"'" + $sa_password + "'" + ";ALTER LOGIN sa ENABLE;"
+    $sqlcmd = "ALTER LOGIN sa with password=" +"'" + $sa_password + "'" + " UNLOCK, CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF;ALTER LOGIN sa ENABLE;"
     & sqlcmd -Q $sqlcmd
 }
 
@@ -40,29 +40,29 @@ $dbs = $attach_dbs_cleaned | ConvertFrom-Json
 if ($null -ne $dbs -And $dbs.Length -gt 0)
 {
     Write-Verbose "Attaching $($dbs.Length) database(s)"
-	    
-    Foreach($db in $dbs) 
+
+    Foreach($db in $dbs)
     {
         if($db.saskey.length -gt 0)
-        { 
-            $saskey = $true 
+        {
+            $saskey = $true
         }
         else
-        { 
-            $saskey = $false 
+        {
+            $saskey = $false
         }
-            
+
         $files = @();
         Foreach($file in $db.dbFiles)
         {
             $files += "(FILENAME = N'$($file)')";
-            
-            # check for a saskey and create one credential per blob Container                  
+
+            # check for a saskey and create one credential per blob Container
             if($saskey)
             {
-                $blob_container = (Split-Path $file).Replace('\','/');                                         
-                $sql_credential = "IF NOT EXISTS (SELECT 1 FROM SYS.CREDENTIALS WHERE NAME = '" + $blob_container + "') BEGIN CREATE CREDENTIAL [" + $blob_container + "] WITH IDENTITY='SHARED ACCESS SIGNATURE', SECRET= '" + $db.saskey + "' END;"              
-            
+                $blob_container = (Split-Path $file).Replace('\','/');
+                $sql_credential = "IF NOT EXISTS (SELECT 1 FROM SYS.CREDENTIALS WHERE NAME = '" + $blob_container + "') BEGIN CREATE CREDENTIAL [" + $blob_container + "] WITH IDENTITY='SHARED ACCESS SIGNATURE', SECRET= '" + $db.saskey + "' END;"
+
                 Write-Verbose "Invoke-Sqlcmd -Query $($sql_credential)"
                 & sqlcmd -Q $sql_credential
             }
@@ -78,10 +78,10 @@ if ($null -ne $dbs -And $dbs.Length -gt 0)
 
 Write-Verbose "Started SQL Server."
 
-$lastCheck = (Get-Date).AddSeconds(-2) 
-while ($true) 
-{ 
-    Get-EventLog -LogName Application -Source "MSSQL*" -After $lastCheck | Select-Object TimeGenerated, EntryType, Message	 
-    $lastCheck = Get-Date 
-    Start-Sleep -Seconds 2 
+$lastCheck = (Get-Date).AddSeconds(-2)
+while ($true)
+{
+    Get-EventLog -LogName Application -Source "MSSQL*" -After $lastCheck | Select-Object TimeGenerated, EntryType, Message
+    $lastCheck = Get-Date
+    Start-Sleep -Seconds 2
 }
