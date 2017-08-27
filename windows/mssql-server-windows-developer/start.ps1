@@ -22,6 +22,18 @@ if($ACCEPT_EULA -ne "Y" -And $ACCEPT_EULA -ne "y")
     exit 1
 }
 
+$directories = @(
+    'C:\Microsoft SQL Server\Data',
+    'C:\Program Files\Microsoft SQL Server\MSSQL.1\MSSQL\Data\'
+)
+
+foreach($dir in $directories) {
+    if (-not (Test-Path $dir)) {
+        mkdir -p $dir | Out-Null
+    }
+}
+
+
 # start the service
 Write-Verbose "Starting SQL Server"
 start-service MSSQLSERVER
