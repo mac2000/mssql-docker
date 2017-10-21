@@ -5,8 +5,8 @@ SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPref
 # https://github.com/Microsoft/mssql-docker/blob/master/windows/mssql-server-windows/dockerfile
 RUN Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=840944" -OutFile C:\SQL.box
 RUN Invoke-WebRequest -Uri "https://go.microsoft.com/fwlink/?linkid=840945" -OutFile C:\SQL.exe
-RUN C:\SQL.exe /qs /x:setup
-RUN .\setup\setup.exe /q /ACTION=Install /INSTANCENAME=MSSQLSERVER /FEATURES=SQLEngine /UPDATEENABLED=0 /SQLSVCACCOUNT='NT AUTHORITY\System' /SQLSYSADMINACCOUNTS='BUILTIN\ADMINISTRATORS' 'user manager\containeradministrator' /TCPENABLED=1 /NPENABLED=0 /IACCEPTSQLSERVERLICENSETERMS /SQLCOLLATION=Cyrillic_General_CI_AS /SECURITYMODE=SQL /SAPWD='P@ssword'
+RUN Start-Process -Wait -FilePath C:\SQL.exe -ArgumentList /qs, /x:setup
+RUN C:\setup\setup.exe /q /ACTION=Install /INSTANCENAME=MSSQLSERVER /FEATURES=SQLEngine /UPDATEENABLED=0 /SQLSVCACCOUNT='NT AUTHORITY\System' /SQLSYSADMINACCOUNTS='BUILTIN\ADMINISTRATORS' 'user manager\containeradministrator' /TCPENABLED=1 /NPENABLED=0 /IACCEPTSQLSERVERLICENSETERMS /SQLCOLLATION=Cyrillic_General_CI_AS /SECURITYMODE=SQL /SAPWD='P@ssword'
 RUN Restart-Service MSSQLSERVER
 RUN Invoke-SqlCmd -Query 'ALTER LOGIN sa with password=''rabota'' UNLOCK, CHECK_POLICY = OFF, CHECK_EXPIRATION = OFF'
 RUN mkdir "'C:\Microsoft SQL Server\Data'"
